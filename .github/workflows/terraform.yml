@@ -1,64 +1,55 @@
-name: Terraform
+name: GKE Cluster Provisioning
 
 on:
   push:
     branches:
-      - main  # Set to your default branch
+      - main
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v2
 
-      # Authenticate with Google Cloud
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+        project_id: teratask-436014
 
-      # Set up Google Cloud SDK
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ secrets.teratask-436014 }}
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.0.10
 
-      # Install Terraform
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0
+    - name: Terraform Init
+      run: terraform init
 
-      # Create gcloud.json file and set the environment variable globally
-      - name: Create gcloud.json and set env var
-        run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" > $HOME/gcloud.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV
-        shell: bash
+    - name: Terraform Plan
+      run: terraform plan
 
-      # Debug step to check if gcloud.json exists and is correct
-      - name: Debug credentials file
-        run: |
-          ls -l $HOME/gcloud.json
-          cat $HOME/gcloud.json
-        shell: bash
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
 
-      # Terraform Init
-      - name: Terraform Init
-        run: terraform init
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure Terraform can access the credentials
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
 
-      # Terraform Plan
-      - name: Terraform Plan
-        run: terraform plan
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure Terraform can access the credentials
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+        project_id: teratask-436014
 
-      # Terraform Apply
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure Terraform can access the credentials
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.0.10
+
+    - name: Terraform Destroy
+      run: terraform destroy -auto-approve
