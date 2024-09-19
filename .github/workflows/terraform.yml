@@ -17,13 +17,12 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # This secret must contain your service account key JSON
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # Ensure this secret contains your service account key JSON
 
       # Set up Google Cloud SDK
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          version: 'latest'
           project_id: ${{ secrets.GCLOUD_PROJECT }}  # Ensure this secret exists
 
       # Install Terraform
@@ -32,13 +31,13 @@ jobs:
         with:
           terraform_version: 1.5.0  # Adjust version as needed
 
-      # Save GCP credentials to a file
+      # Save GCP credentials to a file and set the environment variable
       - name: Set up Google Application Credentials
         run: |
           echo "${{ secrets.GCP_CREDENTIALS }}" > $HOME/gcloud.json
-        # Set environment variable for Terraform to use
+          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json  # Set the env var for later steps
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Make sure this is available
 
       # Terraform Init
       - name: Terraform Init
@@ -47,9 +46,11 @@ jobs:
       # Terraform Plan
       - name: Terraform Plan
         run: terraform plan
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure Terraform can access the credentials
 
       # Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure the credentials file is available
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure Terraform can access the credentials
