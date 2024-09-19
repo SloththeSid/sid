@@ -17,8 +17,8 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           version: 'latest'
-          project_id: ${{ secrets.GCLOUD_PROJECT }}
-          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+          project_id: ${{ secrets.teratask-436014 }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
