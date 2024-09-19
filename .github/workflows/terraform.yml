@@ -13,25 +13,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Authenticate with Google Cloud
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # This secret must contain your service account key JSON
+
+      # Set up Google Cloud SDK
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           version: 'latest'
-          project_id: ${{ secrets.teratask-436014 }}
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ secrets.GCLOUD_PROJECT }}  # Ensure this secret exists
 
+      # Install Terraform
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0  # Adjust version as needed
 
+      # Save GCP credentials to a file
+      - name: Set up Google Application Credentials
+        run: |
+          echo "${{ secrets.GCP_CREDENTIALS }}" > $HOME/gcloud.json
+        # Set environment variable for Terraform to use
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json
+
+      # Terraform Init
       - name: Terraform Init
         run: terraform init
 
+      # Terraform Plan
       - name: Terraform Plan
         run: terraform plan
 
+      # Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Ensure the credentials file is available
