@@ -17,7 +17,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # Ensure this secret contains your service account key JSON
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # This secret contains your service account key JSON
 
       # Set up Google Cloud SDK
       - name: Set up Google Cloud SDK
@@ -32,12 +32,10 @@ jobs:
           terraform_version: 1.5.0  # Adjust version as needed
 
       # Save GCP credentials to a file and set the environment variable
-      - name: Set up Google Application Credentials
+      - name: Create gcloud.json and set GOOGLE_APPLICATION_CREDENTIALS
         run: |
           echo "${{ secrets.GCP_CREDENTIALS }}" > $HOME/gcloud.json
-          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json  # Set the env var for later steps
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud.json  # Make sure this is available
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV  # Exports variable for the workflow
 
       # Terraform Init
       - name: Terraform Init
